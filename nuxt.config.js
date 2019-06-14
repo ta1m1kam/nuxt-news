@@ -26,15 +26,18 @@ export default {
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: '#fff' },
+  loading: { color: '#9ccc65', height: '10px' },
   /*
    ** Global CSS
    */
-  css: [{ src: 'vue-material/dist/vue-material.min.css', lang: 'css' }],
+  css: [
+    { src: 'vue-material/dist/vue-material.min.css', lang: 'css' },
+    { src: '~/assets/theme.scss', lang: 'scss' }
+  ],
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: '~/plugins/vue-material' }],
+  plugins: [{ src: '~/plugins/vue-material' }, { src: '~/plugins/axios' }],
   /*
    ** Nuxt.js modules
    */
@@ -42,13 +45,28 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     '@nuxtjs/pwa',
-    '@nuxtjs/eslint-module'
+    '@nuxtjs/eslint-module',
+    '@nuxtjs/proxy'
   ],
   /*
    ** Axios module configuration
    ** See https://axios.nuxtjs.org/options
    */
-  axios: {},
+  axios: {
+    credentials: true,
+    proxy: true
+  },
+
+  proxy: {
+    '/api/': {
+      target: 'https://newsapi.org/v2',
+      pathRewrite: { '^/api/': '' }
+    }
+  },
+
+  env: {
+    NEWS_API_KEY: process.env.NEWS_API_KEY
+  },
   /*
    ** Build configuration
    */
