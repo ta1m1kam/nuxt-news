@@ -5,60 +5,69 @@
         <div class="md-title">Register</div>
       </md-card-header>
 
-      <form @submit.prevent="registerUser">
+      <!-- Register Form -->
+      <form @submit.prevent="validateForm">
         <md-card-content>
-          <md-field md-clearable>
-            <label for="emal">Email</label>
-            <md-input
-              type="email"
-              name="email"
-              :disable="loading"
-              id="email"
-              autocomplete="email"
-              v-model="form.email"
-            />
+          <md-field md-clearable :class="getValidationClass('email')">
+            <label for="email">Email</label>
+            <md-input :disabled="loading" type="email" name="email" id="email" autocomplete="email" v-model="form.email" />
+            <span class="md-error" v-if="!$v.form.email.required">The email is required</span>
+            <span class="md-error" v-else-if="!$v.form.email.email">Invalid email</span>
           </md-field>
 
-          <md-field>
-            <label for="password">Passord</label>
-            <md-input
-              type="password"
-              name="password"
-              :disable="loading"
-              id="password"
-              autocomplete="password"
-              v-model="form.password"
-            />
+          <md-field :class="getValidationClass('password')">
+            <label for="password">Password</label>
+            <md-input :disabled="loading" type="password" name="password" id="password" autocomplete="password" v-model="form.password" />
+            <span class="md-error" v-if="!$v.form.password.required">The password is required</span>
+            <span class="md-error" v-else-if="!$v.form.password.minLength">Password too short</span>
+            <span class="md-error" v-else-if="!$v.form.password.maxLength">Password too long</span>
           </md-field>
         </md-card-content>
+
         <md-card-actions>
-          <md-button to="/login">Go to login</md-button>
-          <md-button
-            class="md-primary md-raised"
-            dissable="loading"
-            type="submit"
-          >
-            Submit
-          </md-button>
+          <md-button to="/login">Go to Login</md-button>
+          <md-button class="md-primary md-raised" type="submit" :disabled="loading">Submit</md-button>
         </md-card-actions>
       </form>
 
       <md-snackbar :md-active.sync="isAuthenticated">
-        {{ form.email }} was successfully registered!
+        {{form.email}} was successfully registered!
       </md-snackbar>
     </md-card>
   </div>
 </template>
 
 <script>
+import { validationMixin } from "vuelidate"
+import {
+  required,
+  email,
+  minLength,
+  maxLength
+} from "vuelidate/lib/validators"
+
 export default {
-  middleware: 'auth',
+  middleware: "auth",
+  mixins: [validationMixin],
   data: () => ({
     form: {
-      email: '',
-      password: ''
+      email: "",
+      password: ""
     }
   }),
+  validations: {
+    form: {
+      email: {
+        required,
+        email
+      },
+      password: {
+        required,
+        minLength: minLength(6),
+        maxLength: maxLength(20)
+      }
+    }
+  },
   computed: {
     loading() {
       return this.$store.getters.loading
@@ -70,17 +79,31 @@ export default {
   watch: {
     isAuthenticated(value) {
       if (value) {
-        setTimeout(() => this.$router.push('/'), 2000)
+        setTimeout(() => this.$router.push("/"), 2000)
       }
     }
   },
   methods: {
+    validateForm() {
+      this.$v.$touch()
+      if (!this.$v.$invalid) {
+        this.registerUser()
+      }
+    },
     async registerUser() {
-      await this.$store.dispatch('authenticateUser', {
+      await this.$store.dispatch("authenticateUser", {
         email: this.form.email,
         password: this.form.password,
         returnSecureToken: true
       })
+    },
+    getValidationClass(fieldName) {
+      const field = this.$v.form[fieldName]
+      if (field) {
+        return {
+          "md-invalid": field.$invalid && field.$dirty
+        }
+      }
     }
   }
 }

@@ -6,8 +6,17 @@
       </md-button>
       <nuxt-link class="md-primary md-title" to="/">NuxtNews</nuxt-link>
       <div class="md-toolbar-section-end">
-        <md-button to="/login">Login</md-button>
-        <md-button to="/register">Register</md-button>
+        <template v-if="isAuthenticated">
+          <md-button>
+            <md-avatar><img :src="user.avatar" :alt="user.email"></md-avatar>
+            {{　user.email }}
+          </md-button>
+          <md-button>Logout</md-button>
+        </template>
+        <template v-else>
+          <md-button to="/login">Login</md-button>
+          <md-button to="/register">Register</md-button>
+        </template>
         <md-button class="md-accent" @click="showRightSidepanel = true">
           Categories
         </md-button>
@@ -152,6 +161,12 @@ export default {
     },
     loading() {
       return this.$store.getters.loading
+    },
+    isAuthenticated() {
+      return this.$store.getters.isAuthenticated
+    },
+    user() {
+      return this.$store.getters.user
     }
   },
 
