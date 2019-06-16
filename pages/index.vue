@@ -11,7 +11,7 @@
             <md-avatar><img :src="user.avatar" :alt="user.email"></md-avatar>
             {{　user.email }}
           </md-button>
-          <md-button>Logout</md-button>
+          <md-button @click="logoutUser">Logout</md-button>
         </template>
         <template v-else>
           <md-button to="/login">Login</md-button>
@@ -187,6 +187,9 @@ export default {
     },
     changeCountry(country) {
       this.$store.commit('setCountry', country)
+    },
+    logoutUser() {
+      this.$store.dispatch('logoutUser')
     }
   }
 }
