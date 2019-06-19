@@ -1,8 +1,7 @@
 import Vuex from 'vuex'
 import md5 from 'md5'
 import db from '~/plugins/firebase'
-import { saveUserData, clearUserDate } from '~/utils'
-import { clearUserData } from '../utils';
+import { saveUserData, clearUserData } from '~/utils'
 
 const createStore = () => {
   return new Vuex.Store({
@@ -12,7 +11,8 @@ const createStore = () => {
       country: 'us',
       loading: false,
       token: '',
-      user: null
+      user: null,
+      feed: []
     },
     mutations: {
       setHeadlines(state, headlines) {
@@ -32,8 +32,12 @@ const createStore = () => {
       },
       clearToken: state => (state.token = ''),
       clearUser: state => (state.user = null),
+      clearFeed: state => (state.feed = []),
       setUser(state, user) {
         state.user = user
+      },
+      setFeed(state, headlines) {
+        state.feed = headlines
       }
     },
     actions: {
@@ -80,7 +84,32 @@ const createStore = () => {
       logoutUser({ commit }) {
         commit('clearToken')
         commit('clearUser')
+        commit('clearFeed')
         clearUserData()
+      },
+      async addHeadlineToFeed({ state }, headline) {
+        const feedRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
+        await feedRef.set(headline)
+      },
+      async loadUserFeed({ state }) {
+        if (state.user) {
+          const feedRef = db.collection(`users/${state.user.email}/feed`)
+          await feedRef.onSnapshot(querySnapshot => {
+            let headlines = []
+            querySnapshot.forEach(doc => {
+              headlines.push(doc.data())
+              this.commit('setFeed', headlines)
+            })
+            if (querySnapshot.empty) {
+              headlines = []
+              this.commit('setFeed', headlines)
+            }
+          })
+        }
+      },
+      async removeHeadlineFromFeed({ state }, headline) {
+        const headlineRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
+        await headlineRef.delete()
       }
     },
     getters: {
@@ -89,7 +118,8 @@ const createStore = () => {
       loading: state => state.loading,
       country: state => state.country,
       isAuthenticated: state => !!state.token,
-      user: state => state.user
+      user: state => state.user,
+      feed: state => state.feed
     }
   })
 }

@@ -14,6 +14,6 @@ export default function({ store, req }) {
     store.commit('setToken', userData.jwt)
     store.commit('setUser', { email: userData.user, avatar: userData.avatar })
     const timeToLogout = userData.expiresIn - Date.now()
-    store.dispatch('setLogoutTime', timeToLogout)
+    store.dispatch('setLogoutTimer', timeToLogout)
   }
 }

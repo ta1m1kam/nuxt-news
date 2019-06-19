@@ -46,6 +46,28 @@
           <md-option value="jp">日本</md-option>
         </md-select>
       </md-field>
+
+      <md-empty-state class="md-primary" v-if="feed.length === 0 && !user" md-icon="bookmarks" md-label="Nothing in Feed" md-description="Login to bookmark headlines">
+        <md-button to='/login' class="md-primary md-raised">Login</md-button>
+      </md-empty-state>
+      <md-empty-state class="md-accent" v-else-if="feed.length === 0" md-icon="bookmark_outline" md-label="Nothing in Feed" md-description="Anything you bookmark will be safely stored here">
+      </md-empty-state>
+
+      <md-list class="md-triple-line" v-else v-for="headline in feed" :key="headline.id">
+        <md-list-item>
+          <md-avatar><img :src="headline.urlToImage" :alt="headline.title"></md-avatar>
+          <div class="md-list-item-text">
+            <span><a :href="headline.url">{{headline.title}}</a></span>
+            <span>{{headline.source.name}}</span>
+            <span>View Comments</span>
+          </div>
+
+          <md-button class="md-icon-button md-list-action" @click="removeHeadlineFromFeed(headline)">
+            <md-icon class="md-accent">delete</md-icon>
+          </md-button>
+        </md-list-item>
+        <md-divider class="md-inset"></md-divider>
+      </md-list>
     </md-drawer>
 
     <!-- NewsCategoryes -->
@@ -109,7 +131,7 @@
 
                 <md-card-content>{{ headline.description }}</md-card-content>
                 <md-card-actions>
-                  <md-button class="md-icon-button">
+                  <md-button @click="addHeadlineToFeed(headline)" class="md-icon-button" :class="isInFeed(headline.title)">
                     <md-icon>bookmark</md-icon>
                   </md-button>
                   <md-button class="md-icon-button">
@@ -167,6 +189,9 @@ export default {
     },
     user() {
       return this.$store.getters.user
+    },
+    feed() {
+      return this.$store.getters.feed
     }
   },
 
@@ -175,6 +200,7 @@ export default {
       'loadHeadlines',
       `/api/top-headlines?country=${store.state.country}&category=${store.state.category}`
     )
+    await store.dispatch('loadUserFeed')
   },
 
   methods: {
@@ -190,6 +216,18 @@ export default {
     },
     logoutUser() {
       this.$store.dispatch('logoutUser')
+    },
+    async addHeadlineToFeed(headline) {
+      if(this.user) {
+        await this.$store.dispatch('addHeadlineToFeed', headline)
+      }
+    },
+    isInFeed(title) {
+      const inFeed = this.feed.findIndex(headline => headline.title === title) > -1
+      return inFeed ? 'md-primary' : ''
+    },
+    async removeHeadlineFromFeed(headline) {
+      await this.$store.dispatch('removeHeadlineFromFeed', headline)
     }
   }
 }
