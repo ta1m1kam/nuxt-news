@@ -1,3 +1,4 @@
+<script src="../../../../../../Downloads/Like-Comments-and-Order-Comments-by-Like-Count/store/index.js"></script>
 <template>
   <div class="md-layout md-alignment-center" style="margin: 5em 0">
     <div class="md-layout-item md-size-75 md-small-size-80 md-xsmall-size-100">
@@ -13,7 +14,7 @@
 						{{ headline.source.name }}
 						<md-icon>book</md-icon>
 					</div>
-					<span class="md-subhead">
+					<span class="md-subhead" v-if="headline.author">
 						{{headline.author}}
 						<md-icon>face</md-icon>
 					</span>
@@ -41,7 +42,7 @@
           </div>
 
           <md-badge class="md-primary" md-position="bottom" :md-content="comment.likes" />
-					<md-button class="md-icon-button" :disabled="loading || !user">
+					<md-button @click="likeComment(comment.id)" class="md-icon-button" :disabled="loading || !user">
 						<md-icon>thumb_up</md-icon>
 					</md-button>
         </md-list-item>
@@ -91,6 +92,9 @@ export default {
       const commentUserData = { ...this.user }
       commentUserData['username'] = commentUserData['email'].split('@')[0]
       return commentUserData
+    },
+    async likeComment(commentId) {
+      await this.$store.dispatch('likeComment', commentId)
     }
   }
 }

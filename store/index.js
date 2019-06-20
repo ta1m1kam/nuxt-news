@@ -139,7 +139,7 @@ const createStore = () => {
       },
       async loadHeadline(context, headlineSlug) {
         const headlineRef = db.collection('headlines').doc(headlineSlug)
-        const commentsRef = db.collection(`headlines/${headlineSlug}/comments`)
+        const commentsRef = db.collection(`headlines/${headlineSlug}/comments`).orderBy('likes', 'desc')
 
         let loadedHeadline = {}
         await headlineSlug
@@ -164,12 +164,38 @@ const createStore = () => {
         const commentsRef = db.collection(`headlines/${state.headline.slug}/comments`)
         commit('setLoading', true)
         await commentsRef.doc(comment.id).set(comment)
-        await commentsRef.get().then(querySnapshot => {
+        await commentsRef.orderBy('likes', 'desc').get().then(querySnapshot => {
           let comments = []
           querySnapshot.forEach(doc => {
             comments.push(doc.data())
             const updateHeadline = { ...state.headline, comments }
             commit('setHeadline', updateHeadline)
+          })
+        })
+      },
+      async likeComment({ state, commit }, commentId) {
+        const commentsRef = db.collection(`headlines/${state.headline.slug}/comments`).orderBy('likes', 'desc')
+        const likedCommentRef = db.collection('headlines').doc(state.headline.slug).collection('comments').doc(commentId)
+
+        await likedCommentRef.get().then(doc => {
+          if (doc.exists) {
+            const prevLikes = doc.data().likes
+            const currentLikes = prevLikes + 1
+            likedCommentRef.update({
+              likes: currentLikes
+            })
+          }
+        })
+
+        await commentsRef.onSnapshot(querySnapshot => {
+          let loadedComments = [];
+          querySnapshot.forEach(doc => {
+            loadedComments.push(doc.data());
+            const updatedHeadline = {
+              ...state.headline,
+              comments: loadedComments
+            };
+            commit('setHeadline', updatedHeadline);
           })
         })
       }
